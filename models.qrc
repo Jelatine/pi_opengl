@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Models/StrikeFreedom.obj</file>
+        <file>Models/StrikeFreedom.mtl</file>
+    </qresource>
+</RCC>

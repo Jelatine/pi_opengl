@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/">
+        <file>model.vert</file>
+        <file>model.frag</file>
+        <file>skybox.vert</file>
+        <file>skybox.frag</file>
+    </qresource>
+</RCC>
