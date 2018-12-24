@@ -17,10 +17,10 @@ CMesh::CMesh(QVector<Vertex> vertices, QVector<unsigned int> indices, Texture te
 }
 
 void CMesh::setupMesh(){
-    qDebug()<<"textures.diffuse"<<textures.diffuse  ;
-    qDebug()<<"textures.ambient"<<textures.ambient  ;
-    qDebug()<<"textures.specular"<<textures.specular ;
-    qDebug()<<"textures.shininess"<<textures.shininess;
+//    qDebug()<<"textures.diffuse"<<textures.diffuse  ;
+//    qDebug()<<"textures.ambient"<<textures.ambient  ;
+//    qDebug()<<"textures.specular"<<textures.specular ;
+//    qDebug()<<"textures.shininess"<<textures.shininess;
 
     if(!this->textures.diffuse_path.isEmpty()){
         QImage img_diffuse(this->textures.diffuse_path);

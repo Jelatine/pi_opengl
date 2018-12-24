@@ -9,15 +9,16 @@ CGLWidget::CGLWidget(QWidget *parent) :
     rightClicked=false;
     leftClicked=false;
     eyeUp=QVector3D(0.0,1.0,0.0);
+    eyePos=QVector3D(0,0,-1);
+    cameraFront=-eyePos;
+
     pitch=M_PI_4;
     yaw=0;
     distance=5.0;
-    m_update_camera();
-
+//    m_update_camera();
+    skybox=new CSkyBox();
     model=new CModel("/home/lee/Pictures/Gundam/StrikeFreedom.obj");
-//    model->setRotateX(90);
-//    model->setRotateY(90);
-skyboxShaderPro=new QOpenGLShaderProgram();
+    create_models();
     QTimer *timer=new QTimer();
     connect(timer,SIGNAL(timeout()),this,SLOT(update()));
     timer->start(100);
@@ -28,6 +29,15 @@ CGLWidget::~CGLWidget()
     delete ui;
 }
 
+void CGLWidget::create_models()
+{
+    for(int i=0;i<4;i++){
+        CModel *t_model=new CModel("/home/lee/Pictures/Gundam/StrikeFreedom.obj");
+        t_model->setPosition(i,-0.5,7.5);
+        model_list.push_back(t_model);
+    }
+}
+
 void CGLWidget::m_update_camera()
 {
     QVector3D Ori=cameraFront+eyePos;
@@ -36,93 +46,18 @@ void CGLWidget::m_update_camera()
     cameraFront.setZ(-sin(pitch)*distance);
     eyePos=Ori-cameraFront;
 }
-float skyboxVertices[] = {
-    // positions
-    -1.0f,  1.0f, -1.0f,
-    -1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-     1.0f,  1.0f, -1.0f,
-    -1.0f,  1.0f, -1.0f,
 
-    -1.0f, -1.0f,  1.0f,
-    -1.0f, -1.0f, -1.0f,
-    -1.0f,  1.0f, -1.0f,
-    -1.0f,  1.0f, -1.0f,
-    -1.0f,  1.0f,  1.0f,
-    -1.0f, -1.0f,  1.0f,
-
-     1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-
-    -1.0f, -1.0f,  1.0f,
-    -1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f, -1.0f,  1.0f,
-    -1.0f, -1.0f,  1.0f,
-
-    -1.0f,  1.0f, -1.0f,
-     1.0f,  1.0f, -1.0f,
-     1.0f,  1.0f,  1.0f,
-     1.0f,  1.0f,  1.0f,
-    -1.0f,  1.0f,  1.0f,
-    -1.0f,  1.0f, -1.0f,
-
-    -1.0f, -1.0f, -1.0f,
-    -1.0f, -1.0f,  1.0f,
-     1.0f, -1.0f, -1.0f,
-     1.0f, -1.0f, -1.0f,
-    -1.0f, -1.0f,  1.0f,
-     1.0f, -1.0f,  1.0f
-};
 void CGLWidget::initializeGL()
 {
     initializeOpenGLFunctions();
     glEnable(GL_DEPTH_TEST);
     model->initModel();
+    model->setPosition(0,-1.5,2.5);
+    skybox->initSkybox();
+    for(int i=0;i<model_list.size();i++){
+        model_list.at(i)->initModel();
+    }
 
-    skybox=new QOpenGLTexture(QOpenGLTexture::TargetCubeMap);
-
-    QImage img_px=QImage(":/Skybox/right.jpg").convertToFormat(QImage::Format_RGB888);
-    QImage img_nx=QImage(":/Skybox/left.jpg").convertToFormat(QImage::Format_RGB888);
-    QImage img_py=QImage(":/Skybox/top.jpg").convertToFormat(QImage::Format_RGB888);
-    QImage img_ny=QImage(":/Skybox/bottom.jpg").convertToFormat(QImage::Format_RGB888);
-    QImage img_pz=QImage(":/Skybox/front.jpg").convertToFormat(QImage::Format_RGB888);
-    QImage img_nz=QImage(":/Skybox/back.jpg").convertToFormat(QImage::Format_RGB888);
-    skybox->setSize(img_px.width(),img_px.height(),img_px.height());
-    skybox->setFormat(QOpenGLTexture::RGBFormat);
-    skybox->allocateStorage(QOpenGLTexture::RGB,QOpenGLTexture::UInt8);
-    skybox->setData(0,0,QOpenGLTexture::CubeMapPositiveX,QOpenGLTexture::RGB,QOpenGLTexture::UInt8,(const void*)img_px.bits());
-    skybox->setData(0,0,QOpenGLTexture::CubeMapNegativeX,QOpenGLTexture::RGB,QOpenGLTexture::UInt8,(const void*)img_nx.bits());
-    skybox->setData(0,0,QOpenGLTexture::CubeMapPositiveY,QOpenGLTexture::RGB,QOpenGLTexture::UInt8,(const void*)img_py.bits());
-    skybox->setData(0,0,QOpenGLTexture::CubeMapNegativeY,QOpenGLTexture::RGB,QOpenGLTexture::UInt8,(const void*)img_ny.bits());
-    skybox->setData(0,0,QOpenGLTexture::CubeMapPositiveZ,QOpenGLTexture::RGB,QOpenGLTexture::UInt8,(const void*)img_pz.bits());
-    skybox->setData(0,0,QOpenGLTexture::CubeMapNegativeZ,QOpenGLTexture::RGB,QOpenGLTexture::UInt8,(const void*)img_nz.bits());
-    skybox->setMinificationFilter(QOpenGLTexture::Linear);
-    skybox->setMagnificationFilter(QOpenGLTexture::Linear);
-    skybox->setWrapMode(QOpenGLTexture::DirectionS,QOpenGLTexture::ClampToEdge);
-    skybox->setWrapMode(QOpenGLTexture::DirectionT,QOpenGLTexture::ClampToEdge);
-    skybox->setWrapMode(QOpenGLTexture::DirectionR,QOpenGLTexture::ClampToEdge);
-
-    QOpenGLShader *vShader=new QOpenGLShader(QOpenGLShader::Vertex);
-    qDebug()<<"Compile skybox Vertex Shader"<<vShader->compileSourceFile(":/skybox.vert");
-    QOpenGLShader *fShader=new QOpenGLShader(QOpenGLShader::Fragment);
-    qDebug()<<"Compile skybox Fragment Shader"<<fShader->compileSourceFile(":/skybox.frag");
-    skyboxShaderPro->create();
-    skyboxShaderPro->addShader(vShader);
-    skyboxShaderPro->addShader(fShader);
-    skyboxShaderPro->link();
-
-    skyboxVBO=new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-    skyboxVBO->create();
-    skyboxVBO->bind();
-    skyboxVBO->allocate(skyboxVertices, sizeof(skyboxVertices));
-    skyboxVBO->release();
 }
 
 void CGLWidget::paintGL()
@@ -130,30 +65,15 @@ void CGLWidget::paintGL()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.333,0.333,0.333,1);
     QMatrix4x4 camera;
-    eyePos=QVector3D(0,1,-5);
-    cameraFront=-eyePos;
+
+
 
     camera.lookAt(eyePos,eyePos+cameraFront,eyeUp);
     model->draw(camera,eyePos);
-    glDepthFunc(GL_LEQUAL);
-    skyboxShaderPro->bind();
-    skyboxVBO->bind();
-    skybox->bind(0);
-    QMatrix4x4 projection;
-    projection.perspective(45.0,aspect,0.005,5000.0);
-    skyboxShaderPro->setUniformValue("projection",projection);
-    QMatrix4x4 view=camera;
-    view.setColumn(3,QVector4D(0,0,0,1));
-    skyboxShaderPro->setUniformValue("view",view);
-    skyboxShaderPro->setUniformValue("skybox",0);
-    skyboxShaderPro->enableAttributeArray("aPos");
-    skyboxShaderPro->setAttributeBuffer("aPos",GL_FLOAT,0,3);
-    glDrawArrays(GL_TRIANGLES,0,36);
-    skyboxShaderPro->disableAttributeArray("aPos");
-    skybox->release();
-    skyboxVBO->release();
-    skyboxShaderPro->release();
-    glDepthFunc(GL_LESS);
+    for(int i=0;i<model_list.size();i++){
+        model_list.at(i)->draw(camera,eyePos);
+    }
+    skybox->Draw(camera);
 }
 
 void CGLWidget::resizeGL(int w, int h)
@@ -162,11 +82,36 @@ void CGLWidget::resizeGL(int w, int h)
     float t_aspect=(float)w/(float)h;
     model->setAspect(t_aspect);
     aspect=t_aspect;
+
+    skybox->setAspect(aspect);
+
+    for(int i=0;i<model_list.size();i++){
+        model_list.at(i)->setAspect(aspect);
+    }
 }
 
 void CGLWidget::keyPressEvent(QKeyEvent *event)
 {
-
+    if(event->key()==Qt::Key_W){
+        eyePos.setZ(eyePos.z()+0.1);
+        model->set_z(model->z()+0.1);
+    }
+    else if(event->key()==Qt::Key_S){
+        eyePos.setZ(eyePos.z()-0.1);
+        model->set_z(model->z()-0.1);
+    }
+    else if(event->key()==Qt::Key_Q){
+        QVector3D Ori=cameraFront+eyePos;
+        eyePos.setY(eyePos.y()+0.1);
+        cameraFront=Ori-cameraFront;
+        model->setRotateX(1.0);
+    }
+    else if(event->key()==Qt::Key_E){
+        QVector3D Ori=cameraFront+eyePos;
+        eyePos.setY(eyePos.y()-0.1);
+        cameraFront=Ori-cameraFront;
+        model->setRotateX(-1.0);
+    }
 }
 
 void CGLWidget::mouseMoveEvent(QMouseEvent *event)

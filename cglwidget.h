@@ -16,6 +16,7 @@
 #include <QOpenGLTexture>
 #include <QOpenGLShaderProgram>
 #include "cmodel.h"
+#include "cskybox.h"
 namespace Ui {
 class CGLWidget;
 }
@@ -29,16 +30,16 @@ public:
     ~CGLWidget();
 
     CModel *model;
+    CSkyBox *skybox;
+    QList<CModel*> model_list;
 private:
+    void create_models();
     float lastX,lastY;
     bool m_mouse_is_move;
     bool rightClicked,leftClicked;
     float yaw,pitch;
     float distance;
     QVector3D eyePos,eyeUp,cameraFront;
-    QOpenGLTexture *skybox;
-    QOpenGLBuffer *skyboxVBO;
-    QOpenGLShaderProgram *skyboxShaderPro;
     void m_update_camera();
     float aspect;
 protected:

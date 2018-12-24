@@ -14,9 +14,8 @@ uniform mediump mat3 invmodel;
 uniform mediump mat4 view;
 uniform mediump mat4 projection;
 void main(){
-TexCoords = aTexCoords;
-FragPos = vec3(model * vec4(aPos, 1.0));
-//mat3 x=invmodel;
-Normal=   invmodel* aNormal;;
-gl_Position = projection * view * vec4(FragPos, 1.0);
+    TexCoords = aTexCoords;
+    FragPos = vec3(model * vec4(aPos, 1.0));
+    Normal=   invmodel* aNormal;;
+    gl_Position = projection * view * vec4(FragPos, 1.0);
 }

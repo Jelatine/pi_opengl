@@ -94,7 +94,8 @@ void main(){
 
     // diffuse
     mediump vec3 norm = normalize(Normal);
-    mediump vec3 lightDir = normalize(light.position - FragPos);
+    mediump vec3 lightDir = normalize(-light.position);
+//    mediump vec3 lightDir = normalize(light.position - FragPos);
     float diff = max(dot(norm, lightDir), 0.0);
     mediump vec3 diffuse = light.diffuse * (diff * material.diffuse);
 

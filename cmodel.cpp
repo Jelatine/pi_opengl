@@ -52,7 +52,7 @@ void CModel::draw(QMatrix4x4 _camera,QVector3D _cam_pos)
     shaderProgram->setUniformValue("light.ambient", QVector3D(0.2f, 0.2f, 0.2f));
     shaderProgram->setUniformValue("light.diffuse", QVector3D(0.9f, 0.9f, 0.9f));
     shaderProgram->setUniformValue("light.specular", QVector3D(1.0f, 1.0f, 1.0f));
-    shaderProgram->setUniformValue("light.position", _cam_pos);
+    shaderProgram->setUniformValue("light.position", QVector3D(-1.0f, -1.0f, 1.0f));
     shaderProgram->setUniformValue("viewPos", _cam_pos);
     for(int i = 0; i < meshes.size(); i++)
         meshes[i].Draw(shaderProgram);
@@ -240,4 +240,39 @@ void CModel::setRotateZ(float angle)
 void CModel::setAspect(float _aspect)
 {
     aspect=_aspect;
+}
+
+void CModel::setPosition(float _x, float _y, float _z)
+{
+    model.setColumn(3,QVector4D(_x,_y,_z,1.0));
+}
+
+float CModel::x()
+{
+    return model(0,3);
+}
+
+float CModel::y()
+{
+    return model(1,3);
+}
+
+float CModel::z()
+{
+    return model(2,3);
+}
+
+void CModel::set_x(float _x)
+{
+    model(0,3)=_x;
+}
+
+void CModel::set_y(float _y)
+{
+    model(1,3)=_y;
+}
+
+void CModel::set_z(float _z)
+{
+    model(2,3)=_z;
 }

@@ -37,6 +37,14 @@ public:
     void setRotateZ(float angle);
     float aspect;
     void setAspect(float _aspect);
+    void setPosition(float _x,float _y,float _z);
+    float x();
+    float y();
+    float z();
+    void set_x(float _x);
+    void set_y(float _y);
+    void set_z(float _z);
+
 signals:
 
 public slots:

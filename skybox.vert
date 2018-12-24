@@ -1,10 +1,10 @@
 //#version 330 core
-attribute vec3 aPos;
+attribute mediump vec3 aPos;
 
-varying vec3 TexCoords;
+varying mediump vec3 TexCoords;
 
-uniform mat4 projection;
-uniform mat4 view;
+uniform mediump mat4 projection;
+uniform mediump mat4 view;
 
 void main()
 {
