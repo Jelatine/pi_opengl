@@ -97,7 +97,7 @@ void CSkyBox::Draw(QMatrix4x4 _cam)
     skyboxVBO->bind();
     skybox->bind(0);
     QMatrix4x4 projection;
-    projection.perspective(45.0,aspect,0.005,5000.0);
+    projection.perspective(45.0,aspect,0.1,5000.0);
     skyboxShaderPro->setUniformValue("projection",projection);
     QMatrix4x4 view=_cam;
     view.setColumn(3,QVector4D(0,0,0,1));

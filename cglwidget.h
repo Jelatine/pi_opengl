@@ -17,6 +17,8 @@
 #include <QOpenGLShaderProgram>
 #include "cmodel.h"
 #include "cskybox.h"
+#include "ccamera.h"
+#include <qmath.h>
 namespace Ui {
 class CGLWidget;
 }
@@ -34,14 +36,19 @@ public:
     QList<CModel*> model_list;
 private:
     void create_models();
-    float lastX,lastY;
-    bool m_mouse_is_move;
-    bool rightClicked,leftClicked;
-    float yaw,pitch;
-    float distance;
-    QVector3D eyePos,eyeUp,cameraFront;
-    void m_update_camera();
+//    float lastX,lastY;
+//    bool m_mouse_is_move;
+//    bool rightClicked,leftClicked;
+//    float yaw,pitch;
+//    float distance;
+//    QVector3D eyePos,eyeUp,cameraFront;
+//    void m_update_camera();
     float aspect;
+//    int m_main_model_dir;
+    CCamera *camera;
+    bool firstMouse;
+    float lastX,lastY;
+    int m_main_dir;
 protected:
     void initializeGL();
     void paintGL();
@@ -49,6 +56,7 @@ protected:
 
 protected:
     void keyPressEvent(QKeyEvent *event);
+    void keyReleaseEvent(QKeyEvent *event);
     void mouseMoveEvent(QMouseEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);

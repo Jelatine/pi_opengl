@@ -44,6 +44,8 @@ public:
     void set_x(float _x);
     void set_y(float _y);
     void set_z(float _z);
+    QMatrix4x4 getMatrix();
+    void setMatrix(QMatrix4x4 _model);
 
 signals:
 

@@ -1,23 +1,25 @@
 #include "cglwidget.h"
 #include "ui_cglwidget.h"
-
+//#define RASPBERRY_PI
+#ifdef RASPBERRY_PI
+const char* path_model="/home/pi/qt_projects/Gundam";
+#else
+const char* path_model="/home/lee/Pictures/Gundam/";
+#endif
 CGLWidget::CGLWidget(QWidget *parent) :
     QOpenGLWidget(parent),
     ui(new Ui::CGLWidget)
 {
     ui->setupUi(this);
-    rightClicked=false;
-    leftClicked=false;
-    eyeUp=QVector3D(0.0,1.0,0.0);
-    eyePos=QVector3D(0,0,-1);
-    cameraFront=-eyePos;
+    setMouseTracking(true);
 
-    pitch=M_PI_4;
-    yaw=0;
-    distance=5.0;
-//    m_update_camera();
+    camera=new CCamera(QVector3D(0,0,-3));
+    firstMouse=true;
+    lastX=0.0;
+    lastY=0.0;
+m_main_dir=0;
     skybox=new CSkyBox();
-    model=new CModel("/home/lee/Pictures/Gundam/StrikeFreedom.obj");
+    model=new CModel(QString(path_model)+"StrikeFreedom.obj");
     create_models();
     QTimer *timer=new QTimer();
     connect(timer,SIGNAL(timeout()),this,SLOT(update()));
@@ -32,19 +34,10 @@ CGLWidget::~CGLWidget()
 void CGLWidget::create_models()
 {
     for(int i=0;i<4;i++){
-        CModel *t_model=new CModel("/home/lee/Pictures/Gundam/StrikeFreedom.obj");
+        CModel *t_model=new CModel(QString(path_model)+"StrikeFreedom.obj");
         t_model->setPosition(i,-0.5,7.5);
         model_list.push_back(t_model);
     }
-}
-
-void CGLWidget::m_update_camera()
-{
-    QVector3D Ori=cameraFront+eyePos;
-    cameraFront.setX(-cos(pitch)*cos(yaw)*distance);
-    cameraFront.setY(-cos(pitch)*sin(yaw)*distance);
-    cameraFront.setZ(-sin(pitch)*distance);
-    eyePos=Ori-cameraFront;
 }
 
 void CGLWidget::initializeGL()
@@ -52,7 +45,7 @@ void CGLWidget::initializeGL()
     initializeOpenGLFunctions();
     glEnable(GL_DEPTH_TEST);
     model->initModel();
-    model->setPosition(0,-1.5,2.5);
+//    model->setPosition(0,-1.5,2.5);
     skybox->initSkybox();
     for(int i=0;i<model_list.size();i++){
         model_list.at(i)->initModel();
@@ -64,16 +57,37 @@ void CGLWidget::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.333,0.333,0.333,1);
-    QMatrix4x4 camera;
+    QMatrix4x4 t_cam=camera->GetViewMatrix();
+    QVector3D t_view_pos=camera->Position;
 
 
 
-    camera.lookAt(eyePos,eyePos+cameraFront,eyeUp);
-    model->draw(camera,eyePos);
+//    camera.lookAt(eyePos,eyePos+cameraFront,eyeUp);
+//     qDebug()<<eyePos<<eyePos+cameraFront;
     for(int i=0;i<model_list.size();i++){
-        model_list.at(i)->draw(camera,eyePos);
+        model_list.at(i)->draw(t_cam,t_view_pos);
     }
-    skybox->Draw(camera);
+    skybox->Draw(t_cam);
+
+//    t_cam=t_cam.inverted();
+    QVector3D center=camera->Position + camera->Front;
+//    t_cam.setColumn(3,QVector4D(center/*+QVector3D(0,0,-5)*/,1.0));
+    QMatrix4x4 mat=t_cam.inverted();
+    mat.rotate(180,0,1,0);
+    if(m_main_dir==1)
+        mat.rotate(20,1,0,0);
+    if(m_main_dir==2)
+        mat.rotate(-20,1,0,0);
+    if(m_main_dir==3)
+        mat.rotate(-20,0,0,1);
+    if(m_main_dir==4)
+        mat.rotate(20,0,0,1);
+    mat.setColumn(3,QVector4D(center+QVector3D(0,-0.4,0),1.0));
+
+    model->setMatrix(mat);
+//    qDebug()<<"pos:"<<center;
+
+    model->draw(t_cam,t_view_pos);
 }
 
 void CGLWidget::resizeGL(int w, int h)
@@ -92,94 +106,55 @@ void CGLWidget::resizeGL(int w, int h)
 
 void CGLWidget::keyPressEvent(QKeyEvent *event)
 {
-    if(event->key()==Qt::Key_W){
-        eyePos.setZ(eyePos.z()+0.1);
-        model->set_z(model->z()+0.1);
+    if (event->key() == Qt::Key_W){
+        m_main_dir=1;
+        camera->ProcessKeyboard(CCamera::FORWARD, 0.1);
     }
-    else if(event->key()==Qt::Key_S){
-        eyePos.setZ(eyePos.z()-0.1);
-        model->set_z(model->z()-0.1);
+    if (event->key() == Qt::Key_S){
+        m_main_dir=2;
+        camera->ProcessKeyboard(CCamera::BACKWARD, 0.1);
     }
-    else if(event->key()==Qt::Key_Q){
-        QVector3D Ori=cameraFront+eyePos;
-        eyePos.setY(eyePos.y()+0.1);
-        cameraFront=Ori-cameraFront;
-        model->setRotateX(1.0);
+    if (event->key() == Qt::Key_A){
+        m_main_dir=3;
+        camera->ProcessKeyboard(CCamera::LEFT, 0.1);
     }
-    else if(event->key()==Qt::Key_E){
-        QVector3D Ori=cameraFront+eyePos;
-        eyePos.setY(eyePos.y()-0.1);
-        cameraFront=Ori-cameraFront;
-        model->setRotateX(-1.0);
+    if (event->key() == Qt::Key_D){
+        m_main_dir=4;
+        camera->ProcessKeyboard(CCamera::RIGHT, 0.1);
     }
+}
+
+void CGLWidget::keyReleaseEvent(QKeyEvent *event)
+{
+    m_main_dir=0;
 }
 
 void CGLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    float deltaX=(float)event->x()/(float)width()-lastX;
-    float deltaY=(float)event->y()/(float)height()-lastY;
-    lastX=(float)event->x()/(float)width();
-    lastY=(float)event->y()/(float)height();
-    m_mouse_is_move=true;
-    if(rightClicked){
-        if(eyeUp.z()>0)
-            yaw-=deltaX;
-        else
-            yaw+=deltaX;
-        pitch+=deltaY;
-        if(pitch>=2*M_PI)
-            pitch=pitch-2*M_PI;
-        if(pitch<=0)
-            pitch=pitch+2*M_PI;
-        if(pitch>=M_PI_2&&pitch<3*M_PI_2)
-            eyeUp.setZ(-1.0);
-        else
-            eyeUp.setZ(1.0);
+    if (firstMouse)
+    {
+        lastX = (float)event->x();
+        lastY = (float)event->y();
+        firstMouse = false;
     }
-    else if(leftClicked){
-        QVector3D norm=QVector3D::crossProduct(cameraFront,eyeUp).normalized();
-        eyePos -=  norm * deltaX * distance;
-        QVector3D norm2=QVector3D(cameraFront.x(),cameraFront.y(),0.0).normalized();
-        if(pitch>=0&&pitch<M_PI_2)
-            eyePos +=  norm2 * deltaY * distance;
-        else if(pitch>=M_PI_2&&pitch<M_PI)
-            eyePos -=  norm2 * deltaY * distance;
-        else if(pitch>=M_PI&&pitch<3*M_PI_2)
-            eyePos +=  norm2 * deltaY * distance;
-        else
-            eyePos -=  norm2 * deltaY * distance;
-    }
-    m_update_camera();
+
+    float xoffset = (float)event->x() - lastX;
+    float yoffset = lastY - (float)event->y(); // reversed since y-coordinates go from bottom to top
+
+    lastX = (float)event->x();
+    lastY = (float)event->y();
+
+    camera->ProcessMouseMovement(xoffset, yoffset);
 }
 
 void CGLWidget::mousePressEvent(QMouseEvent *event)
 {
-    m_mouse_is_move=false;
-    if(event->button()==Qt::RightButton)
-        rightClicked=true;
-    if(event->button()==Qt::LeftButton)
-        leftClicked=true;
-    lastX=(float)event->x()/(float)width();
-    lastY=(float)event->y()/(float)height();
 }
 
 void CGLWidget::mouseReleaseEvent(QMouseEvent *event)
 {
-    if(event->button()==Qt::RightButton)
-        rightClicked=false;
-    if(event->button()==Qt::LeftButton)
-        leftClicked=false;
 }
 
 void CGLWidget::wheelEvent(QWheelEvent *event)
 {
-    if(event->angleDelta().y()>0)
-        distance+=distance/10.0;
-    else if(event->angleDelta().y()<0)
-        distance-=distance/10.0;
-    if(distance>4000.0)
-        distance=4000.0;
-    else if(distance<=0.01)
-        distance=0.01;
-    m_update_camera();
 }

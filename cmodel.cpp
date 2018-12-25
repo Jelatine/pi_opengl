@@ -52,7 +52,7 @@ void CModel::draw(QMatrix4x4 _camera,QVector3D _cam_pos)
     shaderProgram->setUniformValue("light.ambient", QVector3D(0.2f, 0.2f, 0.2f));
     shaderProgram->setUniformValue("light.diffuse", QVector3D(0.9f, 0.9f, 0.9f));
     shaderProgram->setUniformValue("light.specular", QVector3D(1.0f, 1.0f, 1.0f));
-    shaderProgram->setUniformValue("light.position", QVector3D(-1.0f, -1.0f, 1.0f));
+    shaderProgram->setUniformValue("light.position", QVector3D(1.0f, -1.0f, 1.0f));
     shaderProgram->setUniformValue("viewPos", _cam_pos);
     for(int i = 0; i < meshes.size(); i++)
         meshes[i].Draw(shaderProgram);
@@ -275,4 +275,14 @@ void CModel::set_y(float _y)
 void CModel::set_z(float _z)
 {
     model(2,3)=_z;
+}
+
+QMatrix4x4 CModel::getMatrix()
+{
+    return model;
+}
+
+void CModel::setMatrix(QMatrix4x4 _model)
+{
+    model=_model;
 }

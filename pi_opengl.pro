@@ -16,12 +16,14 @@ SOURCES += main.cpp\
         cglwidget.cpp \
     cmesh.cpp \
     cmodel.cpp \
-    cskybox.cpp
+    cskybox.cpp \
+    ccamera.cpp
 
 HEADERS  += cglwidget.h \
     cmesh.h \
     cmodel.h \
-    cskybox.h
+    cskybox.h \
+    ccamera.h
 
 FORMS    += cglwidget.ui
 
