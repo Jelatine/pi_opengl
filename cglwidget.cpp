@@ -2,7 +2,7 @@
 #include "ui_cglwidget.h"
 //#define RASPBERRY_PI
 #ifdef RASPBERRY_PI
-const char* path_model="/home/pi/qt_projects/Gundam";
+const char* path_model="/home/pi/qt_projects/Gundam/";
 #else
 const char* path_model="/home/lee/Pictures/Gundam/";
 #endif
@@ -12,6 +12,13 @@ CGLWidget::CGLWidget(QWidget *parent) :
 {
     ui->setupUi(this);
     setMouseTracking(true);
+//setCursor(Qt::BlankCursor);
+
+#ifdef RASPBERRY_PI
+driver=new MPU6050Drv();
+init_gpio();
+#endif
+
 
     camera=new CCamera(QVector3D(0,0,-3));
     firstMouse=true;
@@ -40,6 +47,7 @@ void CGLWidget::create_models()
     }
 }
 
+
 void CGLWidget::initializeGL()
 {
     initializeOpenGLFunctions();
@@ -57,6 +65,11 @@ void CGLWidget::paintGL()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glClearColor(0.333,0.333,0.333,1);
+
+#ifdef RASPBERRY_PI
+    refesh_mpu6050();
+#endif
+
     QMatrix4x4 t_cam=camera->GetViewMatrix();
     QVector3D t_view_pos=camera->Position;
 
@@ -107,20 +120,44 @@ void CGLWidget::resizeGL(int w, int h)
 void CGLWidget::keyPressEvent(QKeyEvent *event)
 {
     if (event->key() == Qt::Key_W){
-        m_main_dir=1;
-        camera->ProcessKeyboard(CCamera::FORWARD, 0.1);
+//        m_main_dir=1;
+//        camera->ProcessKeyboard(CCamera::FORWARD, 0.1);
+        run_forward();
     }
     if (event->key() == Qt::Key_S){
-        m_main_dir=2;
-        camera->ProcessKeyboard(CCamera::BACKWARD, 0.1);
+//        m_main_dir=2;
+//        camera->ProcessKeyboard(CCamera::BACKWARD, 0.1);
+        run_backward();
     }
     if (event->key() == Qt::Key_A){
-        m_main_dir=3;
-        camera->ProcessKeyboard(CCamera::LEFT, 0.1);
+//        m_main_dir=3;
+//        camera->ProcessKeyboard(CCamera::LEFT, 0.1);
+        run_left();
     }
     if (event->key() == Qt::Key_D){
-        m_main_dir=4;
-        camera->ProcessKeyboard(CCamera::RIGHT, 0.1);
+//        m_main_dir=4;
+//        camera->ProcessKeyboard(CCamera::RIGHT, 0.1);
+        run_right();
+    }
+
+
+    if (event->key() == Qt::Key_R){
+        run_pitch_up();
+    }
+
+    if (event->key() == Qt::Key_F){
+        run_pitch_down();
+    }
+
+    if (event->key() == Qt::Key_Q){
+        run_yaw_left();
+    }
+
+    if (event->key() == Qt::Key_E){
+        run_yaw_right();
+    }
+    if (event->key() == Qt::Key_Escape){
+        close();
     }
 }
 
@@ -131,20 +168,20 @@ void CGLWidget::keyReleaseEvent(QKeyEvent *event)
 
 void CGLWidget::mouseMoveEvent(QMouseEvent *event)
 {
-    if (firstMouse)
-    {
-        lastX = (float)event->x();
-        lastY = (float)event->y();
-        firstMouse = false;
-    }
+//    if (firstMouse)
+//    {
+//        lastX = (float)event->x();
+//        lastY = (float)event->y();
+//        firstMouse = false;
+//    }
 
-    float xoffset = (float)event->x() - lastX;
-    float yoffset = lastY - (float)event->y(); // reversed since y-coordinates go from bottom to top
+//    float xoffset = (float)event->x() - lastX;
+//    float yoffset = lastY - (float)event->y(); // reversed since y-coordinates go from bottom to top
 
-    lastX = (float)event->x();
-    lastY = (float)event->y();
+//    lastX = (float)event->x();
+//    lastY = (float)event->y();
 
-    camera->ProcessMouseMovement(xoffset, yoffset);
+//    camera->ProcessMouseMovement(xoffset, yoffset);
 }
 
 void CGLWidget::mousePressEvent(QMouseEvent *event)
@@ -157,4 +194,87 @@ void CGLWidget::mouseReleaseEvent(QMouseEvent *event)
 
 void CGLWidget::wheelEvent(QWheelEvent *event)
 {
+}
+
+void CGLWidget::run_forward()
+{
+    m_main_dir=1;
+    camera->ProcessKeyboard(CCamera::FORWARD, 0.1);
+}
+
+void CGLWidget::run_backward()
+{
+    m_main_dir=2;
+    camera->ProcessKeyboard(CCamera::BACKWARD, 0.1);
+}
+
+void CGLWidget::run_left()
+{
+    m_main_dir=3;
+    camera->ProcessKeyboard(CCamera::LEFT, 0.1);
+}
+
+void CGLWidget::run_right()
+{
+    m_main_dir=4;
+    camera->ProcessKeyboard(CCamera::RIGHT, 0.1);
+}
+
+void CGLWidget::run_pitch_up()
+{
+    camera->ProcessMouseMovement(0, 20);
+}
+
+void CGLWidget::run_pitch_down()
+{
+    camera->ProcessMouseMovement(0, -20);
+}
+
+void CGLWidget::run_yaw_left()
+{
+    camera->ProcessMouseMovement(-20, 0);
+}
+
+void CGLWidget::run_yaw_right()
+{
+    camera->ProcessMouseMovement(20, 0);
+}
+
+void CGLWidget::refesh_mpu6050()
+{
+    std::vector<float> result=driver->getAccData();
+    float rot_y=result.at(1);
+    float rot_z=result.at(2);
+    if(rot_y<-3.0){
+        run_right();
+    }
+    else if(rot_y>3.0){
+        run_left();
+    }
+
+    if(rot_z<-3.0){
+        run_pitch_up();
+    }
+    else if(rot_z>3.0){
+        run_pitch_down();
+    }
+
+
+    if(digitalRead(LEFT_BUTTON_PIN)==HIGH){
+        run_yaw_right();
+    }
+    else if(digitalRead(LEFT_BUTTON_PIN)==HIGH){
+        run_yaw_left();
+    }
+
+
+}
+
+void CGLWidget::init_gpio()
+{
+    pinMode(LEFT_BUTTON_PIN,INPUT);
+    pinMode(RIGHT_BUTTON_PIN,INPUT);
+    pinMode(FORWARD_BUTTON_PIN,INPUT);
+    pinMode(LED_PIN,OUTPUT);
+
 }

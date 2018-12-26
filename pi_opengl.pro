@@ -17,13 +17,15 @@ SOURCES += main.cpp\
     cmesh.cpp \
     cmodel.cpp \
     cskybox.cpp \
-    ccamera.cpp
+    ccamera.cpp \
+    mpu6050drv.cpp
 
 HEADERS  += cglwidget.h \
     cmesh.h \
     cmodel.h \
     cskybox.h \
-    ccamera.h
+    ccamera.h \
+    mpu6050drv.h
 
 FORMS    += cglwidget.ui
 
@@ -32,3 +34,6 @@ LIBS+=-lassimp
 RESOURCES += \
     shaders.qrc \
     images.qrc
+
+LIBS+=-lwiringPi
+LIBS+=-lcrypt

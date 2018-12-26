@@ -19,6 +19,13 @@
 #include "cskybox.h"
 #include "ccamera.h"
 #include <qmath.h>
+
+#include "mpu6050drv.h"
+
+#define LEFT_BUTTON_PIN 2
+#define RIGHT_BUTTON_PIN 0
+#define FORWARD_BUTTON_PIN 3
+#define LED_PIN 7
 namespace Ui {
 class CGLWidget;
 }
@@ -49,6 +56,10 @@ private:
     bool firstMouse;
     float lastX,lastY;
     int m_main_dir;
+
+    MPU6050Drv *driver;
+
+
 protected:
     void initializeGL();
     void paintGL();
@@ -61,6 +72,18 @@ protected:
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void wheelEvent(QWheelEvent *event);
+public:
+    void run_forward();
+    void run_backward();
+    void run_left();
+    void run_right();
+    void run_pitch_up();
+    void run_pitch_down();
+    void run_yaw_left();
+    void run_yaw_right();
+
+    void refesh_mpu6050();
+    void init_gpio();
 private:
     Ui::CGLWidget *ui;
 };
