@@ -25,6 +25,7 @@
 #define LEFT_BUTTON_PIN 2
 #define RIGHT_BUTTON_PIN 0
 #define FORWARD_BUTTON_PIN 3
+#define BACKWARD_BUTTON_PIN 1
 #define LED_PIN 7
 namespace Ui {
 class CGLWidget;
@@ -43,6 +44,7 @@ public:
     QList<CModel*> model_list;
 private:
     void create_models();
+
 //    float lastX,lastY;
 //    bool m_mouse_is_move;
 //    bool rightClicked,leftClicked;
@@ -59,7 +61,15 @@ private:
 
     MPU6050Drv *driver;
 
-
+    quint32 index;
+    CModel *md_f91;
+    CModel *md_zaku2;
+    CModel *md_f91_2;
+    CModel *md_zaku2_2;
+    void initOtherModels();
+    void run_circle(CModel* _md, quint32 _index, float _rad, float _h, float _bAngle, bool dir);
+    void setOtherAspect(float _aspect);
+    void drawOtherModels(QMatrix4x4 _camera,QVector3D _cam_pos);
 protected:
     void initializeGL();
     void paintGL();

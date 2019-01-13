@@ -37,9 +37,9 @@ std::vector<float> MPU6050Drv::getAllData()
 {
     // Read gyroscope values.
     // At default sensitivity of 250deg/s we need to scale by 131.
-    float angular_velocity_x = getSinglData(GYRO_XOUT_H) / 131;
-    float angular_velocity_y = getSinglData(GYRO_YOUT_H) / 131;
-    float angular_velocity_z = getSinglData(GYRO_ZOUT_H) / 131;
+    float angular_velocity_x = getSinglData(GYRO_XOUT_H) * .060975f;
+    float angular_velocity_y = getSinglData(GYRO_YOUT_H) * .060975f;
+    float angular_velocity_z = getSinglData(GYRO_ZOUT_H) * .060975f;
 
     // Read accelerometer values.
     // At default sensitivity of 2g we need to scale by 16384.

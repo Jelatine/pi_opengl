@@ -1,6 +1,6 @@
 #include "cglwidget.h"
 #include "ui_cglwidget.h"
-//#define RASPBERRY_PI
+#define RASPBERRY_PI
 #ifdef RASPBERRY_PI
 const char* path_model="/home/pi/qt_projects/Gundam/";
 #else
@@ -15,11 +15,12 @@ CGLWidget::CGLWidget(QWidget *parent) :
 //setCursor(Qt::BlankCursor);
 
 #ifdef RASPBERRY_PI
-driver=new MPU6050Drv();
-init_gpio();
+//    showFullScreen();
+    driver=new MPU6050Drv();
+    init_gpio();
 #endif
 
-
+index=0;
     camera=new CCamera(QVector3D(0,0,-3));
     firstMouse=true;
     lastX=0.0;
@@ -27,6 +28,11 @@ init_gpio();
 m_main_dir=0;
     skybox=new CSkyBox();
     model=new CModel(QString(path_model)+"StrikeFreedom.obj");
+
+    md_f91=new CModel(QString(path_model)+"f91.obj");
+    md_zaku2=new CModel(QString(path_model)+"Zaku2.obj");
+    md_f91_2=new CModel(QString(path_model)+"f91.obj");
+    md_zaku2_2=new CModel(QString(path_model)+"Zaku2.obj");
     create_models();
     QTimer *timer=new QTimer();
     connect(timer,SIGNAL(timeout()),this,SLOT(update()));
@@ -47,6 +53,60 @@ void CGLWidget::create_models()
     }
 }
 
+void CGLWidget::initOtherModels()
+{
+    md_f91->initModel();
+    md_zaku2->initModel();
+    md_f91_2->initModel();
+    md_zaku2_2->initModel();
+}
+
+void CGLWidget::run_circle(CModel *_md, quint32 _index, float _rad,float _h,float _bAngle,bool dir)
+{
+    if(dir){
+        float x=_rad*sin(qDegreesToRadians((double)_index*1.0+_bAngle));
+        float z=_rad*cos(qDegreesToRadians((double)_index*1.0+_bAngle));
+
+        QMatrix4x4 mat;
+        mat.setColumn(3,QVector4D(x,_h,z,1.0));
+        mat.rotate((double)_index*1.0+90+_bAngle,QVector3D(0,1,0));
+        mat.rotate(20,QVector3D(1,0,0));
+        _md->setMatrix(mat);
+    }
+    else{
+        float x=_rad*sin(qDegreesToRadians(-(double)_index*1.0));
+        float z=_rad*cos(qDegreesToRadians(-(double)_index*1.0+_bAngle));
+
+        QMatrix4x4 mat;
+        mat.setColumn(3,QVector4D(x,_h,z,1.0));
+        mat.rotate(-(double)_index*1.0-90+_bAngle,QVector3D(0,1,0));
+        mat.rotate(20,QVector3D(1,0,0));
+        _md->setMatrix(mat);
+    }
+}
+
+void CGLWidget::setOtherAspect(float _aspect)
+{
+    md_f91->setAspect(_aspect);
+    md_zaku2->setAspect(_aspect);
+    md_f91_2->setAspect(_aspect);
+    md_zaku2_2->setAspect(_aspect);
+}
+
+void CGLWidget::drawOtherModels(QMatrix4x4 _camera, QVector3D _cam_pos)
+{
+    run_circle(md_f91, index, 10.0,1.0,0.0,true);
+    run_circle(md_zaku2, index, 20.0,-1.0,180,false);
+    md_f91->draw(_camera,_cam_pos);
+    md_zaku2->draw(_camera,_cam_pos);
+
+    run_circle(md_f91_2, index, 30.0,0.0,0.-90,false);
+    run_circle(md_zaku2_2, index, 40.0,2.0,90,true);
+    md_f91_2->draw(_camera,_cam_pos);
+    md_zaku2_2->draw(_camera,_cam_pos);
+    index++;
+}
+
 
 void CGLWidget::initializeGL()
 {
@@ -58,7 +118,7 @@ void CGLWidget::initializeGL()
     for(int i=0;i<model_list.size();i++){
         model_list.at(i)->initModel();
     }
-
+    initOtherModels();
 }
 
 void CGLWidget::paintGL()
@@ -101,6 +161,8 @@ void CGLWidget::paintGL()
 //    qDebug()<<"pos:"<<center;
 
     model->draw(t_cam,t_view_pos);
+
+    drawOtherModels(t_cam,t_view_pos);
 }
 
 void CGLWidget::resizeGL(int w, int h)
@@ -115,6 +177,8 @@ void CGLWidget::resizeGL(int w, int h)
     for(int i=0;i<model_list.size();i++){
         model_list.at(i)->setAspect(aspect);
     }
+
+    setOtherAspect(aspect);
 }
 
 void CGLWidget::keyPressEvent(QKeyEvent *event)
@@ -182,6 +246,12 @@ void CGLWidget::mouseMoveEvent(QMouseEvent *event)
 //    lastY = (float)event->y();
 
 //    camera->ProcessMouseMovement(xoffset, yoffset);
+#ifndef RASPBERRY_PI
+    float xoffset = (float)event->x() - width()/2.0;
+    float yoffset = height()/2.0 - (float)event->y();
+    camera->ProcessMouseMovement(xoffset, yoffset);
+    QCursor::setPos(mapToGlobal(QPoint(width()/2,height()/2)));
+#endif
 }
 
 void CGLWidget::mousePressEvent(QMouseEvent *event)
@@ -251,6 +321,9 @@ void CGLWidget::refesh_mpu6050()
     else if(rot_y>3.0){
         run_left();
     }
+    else{
+        m_main_dir=0;
+    }
 
     if(rot_z<-3.0){
         run_pitch_up();
@@ -263,8 +336,31 @@ void CGLWidget::refesh_mpu6050()
     if(digitalRead(LEFT_BUTTON_PIN)==HIGH){
         run_yaw_right();
     }
-    else if(digitalRead(LEFT_BUTTON_PIN)==HIGH){
+    else if(digitalRead(RIGHT_BUTTON_PIN)==HIGH){
         run_yaw_left();
+    }
+    else if(digitalRead(FORWARD_BUTTON_PIN)==HIGH){
+        run_forward();
+    }
+    else if(digitalRead(BACKWARD_BUTTON_PIN)==HIGH){
+        run_backward();
+    }
+
+    if(m_main_dir==1){
+        digitalWrite(LED_PIN,LOW);
+        run_forward();
+    }
+    else if(m_main_dir==2){
+        run_backward();
+        digitalWrite(LED_PIN,HIGH);
+    }
+    else if(m_main_dir==3||m_main_dir==4)
+    {
+        digitalWrite(LED_PIN,HIGH);
+    }
+    else{
+        digitalWrite(LED_PIN,HIGH);
+        m_main_dir=0;
     }
 
 
@@ -275,6 +371,7 @@ void CGLWidget::init_gpio()
     pinMode(LEFT_BUTTON_PIN,INPUT);
     pinMode(RIGHT_BUTTON_PIN,INPUT);
     pinMode(FORWARD_BUTTON_PIN,INPUT);
+    pinMode(BACKWARD_BUTTON_PIN,INPUT);
     pinMode(LED_PIN,OUTPUT);
 
 }
