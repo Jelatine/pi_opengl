@@ -60,6 +60,7 @@ public:
     // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     void ProcessMouseScroll(float yoffset);
 
+    void setTargetPosition(QVector3D fornt);
 private:
     // Calculates the front vector from the Camera's (updated) Euler Angles
     void updateCameraVectors();

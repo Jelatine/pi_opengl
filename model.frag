@@ -71,5 +71,20 @@ void main(){
     specular = ratio * light.specular * (spec * material.specular);
     result += ambient + diffuse + specular;
 
+    // ambient
+    ambient = ratio * light.ambient * material.ambient;
+    // diffuse
+    norm = normalize(Normal);
+    lightDir = normalize(vec3(1.0, -1.0, 1.0));
+//    mediump vec3 lightDir = normalize(light.position - FragPos);
+    diff = max(dot(norm, lightDir), 0.0);
+    diffuse = ratio * light.diffuse * (diff * material.diffuse);
+    // specular
+    viewDir = normalize(viewPos - FragPos);
+    reflectDir = reflect(-lightDir, norm);
+    spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    specular = ratio * light.specular * (spec * material.specular);
+    result += ambient + diffuse + specular;
+
     gl_FragColor = vec4(result, 1.0);
 }

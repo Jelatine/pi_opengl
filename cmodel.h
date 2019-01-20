@@ -15,11 +15,18 @@
 #include <assimp/scene.h>
 using namespace Assimp;
 
-class CModel : public QObject
+//#include <bullet/btBulletCollisionCommon.h>
+//#include <btBulletCollisionCommon.h>
+//#include <BulletCollision/btBulletCollisionCommon.h>
+
+#include <btBulletDynamicsCommon.h>
+#include <bullet/BulletCollision/btBulletCollisionCommon.h>
+#include <bullet/BulletCollision/CollisionShapes/btTriangleShape.h>
+#include <bullet/BulletDynamics/btBulletDynamicsCommon.h>
+class CModel
 {
-    Q_OBJECT
 public:
-    explicit CModel(QString _name, bool gamma = false,QObject *parent = 0);
+    explicit CModel(QString _name, btDiscreteDynamicsWorld* _world=0, float _mass=1.0);
     void loadModel(QString _name);
     void initModel();
     void draw(QMatrix4x4 _camera, QVector3D _cam_pos);
@@ -27,7 +34,7 @@ public:
     QVector<CMesh> meshes;
     QVector<Texture> textures_loaded;
     QString directory;
-    bool gammaCorrection;
+//    bool gammaCorrection;
     void processNode(aiNode *node, const aiScene *scene);
     CMesh processMesh(aiMesh *mesh, const aiScene *scene);
     QString m_format_path(QString filename);
@@ -38,6 +45,7 @@ public:
     float aspect;
     void setAspect(float _aspect);
     void setPosition(float _x,float _y,float _z);
+    QVector3D getPosition();
     float x();
     float y();
     float z();
@@ -47,6 +55,11 @@ public:
     QMatrix4x4 getMatrix();
     void setMatrix(QMatrix4x4 _model);
 
+    float m_mass;
+    btCompoundShape *m_compound_shape;
+    btRigidBody *m_body;
+    btDiscreteDynamicsWorld* m_world;
+    void set_velocity(float x,float y,float z);
 signals:
 
 public slots:

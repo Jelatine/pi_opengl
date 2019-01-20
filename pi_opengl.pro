@@ -37,3 +37,7 @@ RESOURCES += \
 
 LIBS+=-lwiringPi
 LIBS+=-lcrypt
+
+INCLUDEPATH+="/usr/local/include/bullet"
+LIBS+=-lLinearMath -lBulletCollision -lBulletDynamics
+

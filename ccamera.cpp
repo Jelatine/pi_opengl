@@ -5,7 +5,7 @@
 
 //}
 
-CCamera::CCamera(QVector3D position, QVector3D up, float yaw, float pitch) : Front(QVector3D(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+CCamera::CCamera(QVector3D position, QVector3D up, float yaw, float pitch) : Front(QVector3D(0.0f, 0.0f, -4.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
 {
     Position = position;
     WorldUp = up;
@@ -27,6 +27,7 @@ QMatrix4x4 CCamera::GetViewMatrix()
 {
     QMatrix4x4 t_cam;
     t_cam.lookAt(Position, Position + Front, Up);
+//    qDebug()<<Front;
     return t_cam;
 }
 
@@ -74,6 +75,14 @@ void CCamera::ProcessMouseScroll(float yoffset)
         Zoom = 45.0f;
 }
 
+void CCamera::setTargetPosition(QVector3D fornt)
+{
+    Position=fornt-Front;
+    qDebug()<<Position<<Position+Front<<Front;
+//    Front=fornt;
+//    qDebug()<<Front<<Position + Front;
+}
+
 void CCamera::updateCameraVectors()
 {
     // Calculate the new Front vector
@@ -81,7 +90,7 @@ void CCamera::updateCameraVectors()
     front.setX(-cos(qDegreesToRadians(Yaw)) * cos(qDegreesToRadians(Pitch)));
     front.setY(sin(qDegreesToRadians(Pitch)));
     front.setZ(-sin(qDegreesToRadians(Yaw)) * cos(qDegreesToRadians(Pitch)));
-    Front =  front.normalized();
+    Front =  3*front.normalized();
     // Also re-calculate the Right and Up vector
     Right = QVector3D::crossProduct(Front, WorldUp).normalized();  // Normalize the vectors, because their length gets closer to 0 the more you look up or down which results in slower movement.
     Up    = QVector3D::crossProduct(Right, Front).normalized();

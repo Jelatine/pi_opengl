@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>CGLWidget</string>
+   <string>Jelly Gundam OpenGL</string>
   </property>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
